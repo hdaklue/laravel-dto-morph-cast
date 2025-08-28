@@ -13,8 +13,13 @@ class MorphCast
     /** @var array<string, mixed> */
     private array $resolvedDto;
 
-    public function __construct()
+    /** @var array<string> */
+    private array $hideSensitive;
+
+    public function __construct(array $hideSensitive = [])
     {
+        $this->hideSensitive = $hideSensitive;
+
         $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2);
 
         throw_unless(is_array($trace[1]['object']->dtoData ?? null), new CastException(
@@ -42,7 +47,11 @@ class MorphCast
         // forceFill is correct here - we're in a DTO casting context with trusted data
         // and need to preserve all attributes (fillable + non-fillable like id, timestamps)
         if (is_array($value) && ! empty($value)) {
-            $modelInstance->forceFill($value);
+            $filteredValue = $this->hideSensitive
+                ? array_diff_key($value, array_flip($this->hideSensitive))
+                : $value;
+
+            $modelInstance->forceFill($filteredValue);
         }
 
         return $modelInstance;
