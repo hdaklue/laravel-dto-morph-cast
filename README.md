@@ -10,6 +10,7 @@ A powerful MorphCast plugin for Laravel Validated DTO that provides dynamic poly
 
 - **Dynamic Model Resolution**: Automatically resolves model classes using Laravel's morph map
 - **Polymorphic Casting**: Cast data to different model types based on morph type keys
+- **Sensitive Data Protection**: Hide sensitive fields from being cast to model instances
 - **Seamless Integration**: Works perfectly with Laravel Validated DTO package
 - **Type Safety**: Validates model classes and throws meaningful exceptions
 - **Convention Based**: Follows Laravel's morphable naming conventions
@@ -85,6 +86,63 @@ $dto = new MyDTO($data);
 // The 'commentable' property will be cast to a Post model instance
 $post = $dto->commentable; // instanceof App\Models\Post
 echo $post->title; // "My Post Title"
+```
+
+### Hiding Sensitive Data
+
+You can hide sensitive fields from being cast to the model by passing them as an array to the constructor:
+
+```php
+use HDaklue\LaravelDTOMorphCast\MorphCast;
+use WendellAdriel\ValidatedDTO\ValidatedDTO;
+use WendellAdriel\ValidatedDTO\Casting\Castable;
+
+class MyDTO extends ValidatedDTO implements Castable
+{
+    public function casts(): array
+    {
+        return [
+            'user' => new MorphCast(), // Normal casting
+            'sensitive_user' => new MorphCast(['password', 'secret_key']), // Hide sensitive fields
+        ];
+    }
+}
+```
+
+You can also use Laravel's array-based casting syntax:
+
+```php
+public function casts(): array
+{
+    return [
+        'user' => MorphCast::class,
+        'sensitive_user' => [MorphCast::class, ['password', 'api_token', 'secret']],
+    ];
+}
+```
+
+When sensitive fields are specified, they will be excluded from the `forceFill()` operation:
+
+```php
+$data = [
+    'sensitive_user_type' => 'user',
+    'sensitive_user' => [
+        'id' => 1,
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' => 'secret123',        // This will be hidden
+        'api_token' => 'token123',        // This will be hidden
+        'created_at' => '2024-01-01 00:00:00'
+    ]
+];
+
+$dto = new MyDTO($data);
+$user = $dto->sensitive_user;
+
+// Only non-sensitive data is available
+echo $user->name; // "John Doe"
+echo $user->email; // "john@example.com"
+// $user->password and $user->api_token are not set
 ```
 
 ### Naming Conventions
