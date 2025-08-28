@@ -131,6 +131,19 @@ MorphCast provides clear error messages for common issues:
 4. **Validation**: Ensures the resolved class exists and extends Eloquent Model
 5. **Instantiation**: Creates and fills the model instance with the provided data
 
+## Performance Considerations
+
+### Minimal Debug Backtrace Usage
+
+This package uses `debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2)` with a strict limit of 2 levels to access the parent DTO's data array. This approach provides several benefits:
+
+- **Minimal Overhead**: Only traces 2 stack frames (current + parent), not the entire call stack
+- **Targeted Access**: Specifically retrieves only the object data needed for casting
+- **Auto-Resolution**: Eliminates the need for manual configuration or explicit passing of morph type information
+- **Clean API**: Maintains a simple, intuitive interface without complex setup requirements
+
+The small performance cost of this limited backtrace is offset by the significant flexibility gain of automatic morph type resolution, making polymorphic casting seamless and convention-based.
+
 ## Testing
 
 ```bash
