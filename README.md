@@ -46,6 +46,7 @@ class MyDTO extends ValidatedDTO implements Castable
     {
         return [
             'commentable' => new MorphCast(), // Will look for 'commentable_type' key
+            'user' => new MorphCast(['password', 'api_token']), // Hide sensitive fields
         ];
     }
 }
