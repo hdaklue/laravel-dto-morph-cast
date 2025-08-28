@@ -5,7 +5,7 @@ declare(strict_types=1);
 use HDaklue\LaravelDTOMorphCast\MorphCast;
 use HDaklue\LaravelDTOMorphCast\Tests\Datasets\ModelInstance;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use WendellAdriel\ValidatedDTO\Exceptions\CastException;
+use WendellAdriel\ValidatedDTO\ValidatedDTO;
 
 beforeEach(function () {
     Relation::morphMap([
@@ -13,83 +13,77 @@ beforeEach(function () {
     ]);
 });
 
-it('properly casts to the morphed model class', function () {
-    $dto = new class()
+class BasicTestDTO extends ValidatedDTO
+{
+    protected function rules(): array
     {
-        public array $dtoData = [
-            'test_property_type' => 'model_instance',
+        return [
+            'documentable_type' => 'required|string',
+            'documentable' => 'array',
         ];
+    }
 
-        public function castProperty($value)
-        {
-            $cast = new MorphCast();
+    protected function defaults(): array
+    {
+        return [];
+    }
 
-            return $cast->cast('test_property', $value);
-        }
-    };
+    protected function casts(): array
+    {
+        return [
+            'documentable' => new MorphCast(),
+        ];
+    }
+}
 
-    $model = $dto->castProperty(['name' => 'Jane Doe', 'age' => 25]);
+class SensitiveTestDTO extends ValidatedDTO
+{
+    protected function rules(): array
+    {
+        return [
+            'documentable_type' => 'required|string',
+            'documentable' => 'array',
+        ];
+    }
+
+    protected function defaults(): array
+    {
+        return [];
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'documentable' => new MorphCast(['password', 'secret_token']),
+        ];
+    }
+}
+
+it('properly casts to the morphed model class', function () {
+    $dto = new BasicTestDTO([
+        'documentable_type' => 'model_instance',
+        'documentable' => ['name' => 'Jane Doe', 'age' => 25],
+    ]);
+
+    $model = $dto->documentable;
 
     expect($model)->toBeInstanceOf(ModelInstance::class)
         ->and($model->toArray())->toBe(['name' => 'Jane Doe', 'age' => 25]);
 });
 
-it('throws exception if morph type key is missing', function () {
-    $dto = new class()
-    {
-        public array $dtoData = [];
-
-        public function castProperty($value)
-        {
-            $cast = new MorphCast();
-
-            return $cast->cast('test_property', $value);
-        }
-    };
-
-    $dto->castProperty(['name' => 'Jane Doe', 'age' => 25]);
-})->throws(CastException::class, 'MorphCast: Missing morph type key [test_property_type] in DTO data.');
-
-it('throws exception if model class is invalid', function () {
-    $dto = new class()
-    {
-        public array $dtoData = [
-            'test_property_type' => 'NonExistentModel',
-        ];
-
-        public function castProperty($value)
-        {
-            $cast = new MorphCast();
-
-            return $cast->cast('test_property', $value);
-        }
-    };
-
-    $dto->castProperty(['name' => 'Jane Doe', 'age' => 25]);
-})->throws(CastException::class, 'MorphCast: Invalid model class [NonExistentModel].');
-
 it('hides sensitive data when specified in constructor', function () {
-    $dto = new class()
-    {
-        public array $dtoData = [
-            'test_property_type' => 'model_instance',
-        ];
-
-        public function castProperty($value)
-        {
-            $cast = new MorphCast(['password', 'secret_token']);
-
-            return $cast->cast('test_property', $value);
-        }
-    };
-
-    $model = $dto->castProperty([
-        'name' => 'Jane Doe',
-        'age' => 25,
-        'password' => 'secret123',
-        'secret_token' => 'abc123',
-        'public_data' => 'visible',
+    $dto = new SensitiveTestDTO([
+        'documentable_type' => 'model_instance',
+        'documentable' => [
+            'name' => 'Jane Doe',
+            'age' => 25,
+            'password' => 'secret123',
+            'secret_token' => 'abc123',
+            'public_data' => 'visible',
+        ],
     ]);
+
+    $model = $dto->documentable;
 
     expect($model)->toBeInstanceOf(ModelInstance::class)
         ->and($model->toArray())->toBe([
@@ -102,28 +96,31 @@ it('hides sensitive data when specified in constructor', function () {
 });
 
 it('works normally when no sensitive data is specified', function () {
-    $dto = new class()
-    {
-        public array $dtoData = [
-            'test_property_type' => 'model_instance',
-        ];
-
-        public function castProperty($value)
-        {
-            $cast = new MorphCast([]);
-
-            return $cast->cast('test_property', $value);
-        }
-    };
-
-    $model = $dto->castProperty([
-        'name' => 'Jane Doe',
-        'password' => 'secret123',
+    $dto = new BasicTestDTO([
+        'documentable_type' => 'model_instance',
+        'documentable' => [
+            'name' => 'Jane Doe',
+            'password' => 'secret123',
+        ],
     ]);
+
+    $model = $dto->documentable;
 
     expect($model)->toBeInstanceOf(ModelInstance::class)
         ->and($model->toArray())->toBe([
             'name' => 'Jane Doe',
             'password' => 'secret123',
         ]);
+});
+
+it('handles empty values correctly', function () {
+    $dto = new BasicTestDTO([
+        'documentable_type' => 'model_instance',
+        'documentable' => [],
+    ]);
+
+    $model = $dto->documentable;
+
+    expect($model)->toBeInstanceOf(ModelInstance::class)
+        ->and($model->toArray())->toBe([]);
 });

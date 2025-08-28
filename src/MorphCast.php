@@ -6,9 +6,10 @@ namespace HDaklue\LaravelDTOMorphCast;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use WendellAdriel\ValidatedDTO\Exceptions\CastException;
+use InvalidArgumentException;
+use WendellAdriel\ValidatedDTO\Casting\Castable;
 
-class MorphCast
+class MorphCast implements Castable
 {
     /** @var array<string, mixed> */
     private array $resolvedDto;
@@ -22,7 +23,7 @@ class MorphCast
 
         $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2);
 
-        throw_unless(is_array($trace[1]['object']->dtoData ?? null), new CastException(
+        throw_unless(is_array($trace[1]['object']->dtoData ?? null), new InvalidArgumentException(
             'MorphCast: Calling DTO instance does not have accessible dtoData array.',
         ));
 
@@ -33,13 +34,13 @@ class MorphCast
     {
         [$morphTypeKey, $morphIdKey] = $this->resolveMorphKeys($property);
 
-        throw_unless(isset($this->resolvedDto[$morphTypeKey]), new CastException("MorphCast: Missing morph type key [{$morphTypeKey}] in DTO data."));
+        throw_unless(isset($this->resolvedDto[$morphTypeKey]), new InvalidArgumentException("MorphCast: Missing morph type key [{$morphTypeKey}] in DTO data."));
 
         $morphClassAlias = $this->resolvedDto[$morphTypeKey];
 
         $modelClass = Relation::getMorphedModel($morphClassAlias) ?? $morphClassAlias;
 
-        throw_if(! class_exists($modelClass) || ! is_subclass_of($modelClass, Model::class), new CastException("MorphCast: Invalid model class [{$modelClass}]."));
+        throw_if(! class_exists($modelClass) || ! is_subclass_of($modelClass, Model::class), new InvalidArgumentException("MorphCast: Invalid model class [{$modelClass}]."));
 
         /** @var Model $modelInstance */
         $modelInstance = new $modelClass();
