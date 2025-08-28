@@ -1,0 +1,61 @@
+{
+    "name": "hdaklue/laravel-dto-morph-cast",
+    "description": "MorphCast for Laravel Validated DTO - Dynamic polymorphic casting for Eloquent models",
+    "type": "library",
+    "keywords": [
+        "laravel",
+        "dto",
+        "data transfer object",
+        "casting",
+        "morph",
+        "polymorphic",
+        "eloquent"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "HDaklue\\LaravelDTOMorphCast\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "HDaklue\\LaravelDTOMorphCast\\Tests\\": "tests/"
+        }
+    },
+    "support": {
+        "issues": "https://github.com/hdaklue/laravel-dto-morph-cast/issues",
+        "source": "https://github.com/hdaklue/laravel-dto-morph-cast"
+    },
+    "authors": [
+        {
+            "name": "Hassan Ibrahim",
+            "email": "hassan@daklue.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/database": "^11.0|^12.0",
+        "wendelladriel/laravel-validated-dto": "^4.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.21",
+        "orchestra/testbench": "^9.0|^10.0",
+        "pestphp/pest": "^2.0|^3.0"
+    },
+    "scripts": {
+        "lint": "pint",
+        "test:lint": "pint --test",
+        "test:unit": "./vendor/bin/pest --order-by random",
+        "test": [
+            "@test:lint",
+            "@test:unit"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
