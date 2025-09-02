@@ -1,5 +1,7 @@
 # Laravel DTO MorphCast
 
+This package is a plugin for the [WendellAdriel/laravel-validated-dto](https://github.com/WendellAdriel/laravel-validated-dto) package.
+
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/hdaklue/laravel-dto-morph-cast.svg?style=flat-square)](https://packagist.org/packages/hdaklue/laravel-dto-morph-cast)
 [![Tests](https://github.com/hdaklue/laravel-dto-morph-cast/workflows/run-tests/badge.svg)](https://github.com/hdaklue/laravel-dto-morph-cast/actions)
 [![Total Downloads](https://img.shields.io/packagist/dt/hdaklue/laravel-dto-morph-cast.svg?style=flat-square)](https://packagist.org/packages/hdaklue/laravel-dto-morph-cast)
